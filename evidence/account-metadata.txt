@@ -1,0 +1,10 @@
+SANITIZED TRANSCRIPTION — NOT AN ORIGINAL CAPTURE
+Source: owner-pasted /etc/passwd output in the research conversation.
+Redaction: usernames replaced with role labels; entire password fields removed.
+UID, GID, empty description field, home, and shell preserved.
+
+ADMINISTRATOR:[REDACTED]:0:0::/tmp:/bin/cli
+NOBODY_ROLE:[REDACTED]:0:0::/tmp:/dev/null
+STANDARD_USER:[REDACTED]:1:0::/tmp:/bin/cli
+
+This establishes account metadata only, not successful authentication.

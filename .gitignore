@@ -1,0 +1,16 @@
+# Keep raw device material and secrets out of this repository.
+.DS_Store
+.env
+.env.*
+raw/
+private/
+firmware/
+*.bin
+*.img
+*.squashfs
+*.pcap
+*.pcapng
+*.pem
+*.key
+*.gpr
+*.rep/

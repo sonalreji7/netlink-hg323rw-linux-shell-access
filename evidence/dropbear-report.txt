@@ -1,0 +1,7 @@
+DIRECT USER STATEMENT — NOT COMMAND OUTPUT
+Source: owner message in the research conversation.
+
+"dropbear is present"
+
+No accompanying process listing, version output, listening socket, or SSH
+success transcript was available. Presence must not be equated with reachability.
