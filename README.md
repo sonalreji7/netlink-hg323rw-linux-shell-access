@@ -23,8 +23,6 @@
 - [9. Explore SSH without changing the service](#9-explore-ssh-without-changing-the-service)
 - [Troubleshooting](#troubleshooting)
 - [Security interpretation and limits](#security-interpretation-and-limits)
-- [Reproduction checklist and remaining evidence](#reproduction-checklist-and-remaining-evidence)
-- [Suggested repository layout](#suggested-repository-layout)
 - [Evidence included in this repository](#evidence-included-in-this-repository)
 - [Sources](#sources)
 
@@ -417,44 +415,6 @@ Physical UART access and a vendor shell-transition command can expose powerful l
 The UID 0 account configuration and weak password-hash format merit review. Exploitability depends on reachable authentication paths and service policy. Legacy kernel and BusyBox version claims should be verified on the device before matching advisories.
 
 Do not attach raw firmware dumps, Ghidra projects containing embedded secrets, password databases, private host keys, or unredacted photographs to a public issue. Publishing a technical guide does not automatically grant redistribution rights for vendor firmware.
-
----
-
-## Reproduction checklist and remaining evidence
-
-- [ ] Add redacted board and IC photographs; confirm exact model, PCB revision, and silicon suffix.
-- [ ] Record measured UART voltage, pad orientation, baud, framing, and adapter I/O level.
-- [ ] Preserve bootloader and kernel banners plus a redacted boot log.
-- [ ] Record image provenance, SHA-256, partition boundaries, SquashFS offset/version/compressor, and extraction tool version.
-- [ ] Preserve CLI ELF headers and the command-handler cross-reference with firmware-specific addresses.
-- [ ] Capture a direct shell identity check and CPU/memory/storage inventory.
-- [x] Preserve sanitized account UID/GID/home/shell findings.
-- [x] Record the researcher's report that Dropbear is present.
-- [ ] Establish Dropbear process/listener configuration.
-- [ ] Test authorized SSH login and verify the resulting shell and UID.
-
-These unchecked items are evidence gaps, not failed experiments. No new hardware commands, extraction, or SSH tests were executed while writing this page.
-
----
-
-## Suggested repository layout
-
-```text
-README.md
-docs/
-  hardware.md
-  uart.md
-  boot-and-storage.md
-  cli-analysis.md
-  ssh-status.md
-evidence-redacted/
-  boot.txt
-  runtime-summary.txt
-  board-redacted.png
-  firmware-manifest.txt
-```
-
-Only populate evidence files with real, reviewed results. Keep raw captures, firmware, credentials, and analysis projects outside the public repository. Use explicit evidence labels in future changes so a new firmware result cannot silently overwrite an older observation.
 
 ---
 
