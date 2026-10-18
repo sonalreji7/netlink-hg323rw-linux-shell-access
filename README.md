@@ -32,11 +32,11 @@
 
 This guide preserves the researcher's investigation and provides a conservative reproduction procedure. It is not a claim that every command below was run successfully on this unit.
 
-The available source is the closing portion of the research conversation “Find Router RX TX.” It contains actual account-database output and the researcher's statement that Dropbear is present. Earlier work on UART, U-Boot, SquashFS, Ghidra, and root-shell access is reported in the project handoff and earlier assistant summaries, but the original photos, serial captures, firmware image, disassembly, and command outputs were not available to inspect when preparing this guide.
+The evidence now includes the owner's boot log, UART-style hexadecimal dump, conversion script, SquashFS image, extracted filesystem, three Ghidra screenshots, and a PCB photograph, alongside the original conversation's account output. Offline checks reproduced the firmware conversion and matched the CLI binary to the screenshot addresses. Root-shell access remains a reported runtime result: the supplied boot log does not contain a direct `id` or UID-status capture. See the [evidence index](evidence/README.md) and [offline validation record](evidence/offline-validation.md).
 
 **Evidence labels used throughout:**
 
-- **Observed:** device output supplied by the researcher in the retrieved record.
+- **Observed:** supplied logs, photographs, or binary contents inspected directly; each finding identifies its source.
 - **Reported:** the researcher or project handoff describes the result, but underlying artifacts are unavailable here.
 - **Reference-verified:** an external primary source supports the stated fact, within its stated scope.
 - **Hypothesis / pending:** an inference or experiment that still needs confirmation.
@@ -64,20 +64,26 @@ The strongest preserved runtime evidence is the account mapping: the administrat
 
 | Item | Value / finding | Evidence and limit |
 | --- | --- | --- |
-| Device under investigation | Netlink HG323RW V3.6 GPON router / ONT | Researcher-supplied identification; board and label photographs unavailable. |
-| SoC | Realtek RTL9602C family | Reported for the unit. Exact silicon suffix and stepping are not independently verified. |
-| CPU format | MIPS, reportedly big-endian | Earlier assistant summary; verify ELF headers before selecting Ghidra language or building software. |
-| Bootloader | U-Boot | Reported investigation stage; version and command set unavailable. |
-| Linux | 2.6.30.9 | Earlier assistant summary; fresh uname output required for direct verification. |
-| Userspace | BusyBox 1.12.4; vendor /bin/cli | BusyBox version reported; /bin/cli directly appears in supplied account output. |
-| Root filesystem | SquashFS | Reported extraction; exact version, compressor, and offset unavailable. |
-| SSH software | Dropbear present | Researcher explicitly reported presence. Running state, version, listener, and successful login remain unconfirmed. |
-| RAM, flash, clock, PHY, Wi-Fi chipset | Not verified | No values invented from adjacent models. |
-| UART pin order, logic voltage, baud rate | Not preserved | Must be measured or recovered from original bench records. |
+| PCB revision | HG323RW_V3.6 | Visible silkscreen in the supplied photograph. |
+| SoC | Realtek RTL9602C | Boot preloader and board banner; exact suffix not established. |
+| CPU / buses | CPU 625 MHz; memory clock 500 MHz; LX 200 MHz; SPI 50 MHz | Boot-reported clocks, not independent electrical measurements. |
+| RAM | 128 MB DDR2 | U-Boot report; Linux usable memory is lower. |
+| Flash | 1 × 16 MB SPI NOR; ID C84018 | Boot report; no flash-manufacturer inference required. |
+| Executable format | ELF32, big-endian MIPS, dynamic /lib/ld-uClibc.so.0 | Direct inspection of bin/cli. |
+| Bootloader | Bismarck preloader; U-Boot 2011.12.M | Captured boot banner, build date May 22, 2021. |
+| Linux / userspace | Linux 2.6.30.9; BusyBox 1.12.4 | Captured boot log. |
+| Root filesystem | SquashFS 4.0, LZMA, 131072-byte blocks, 1104 inodes | Supplied image superblock; filesystem metadata is little-endian even though CLI code is big-endian. |
+| SSH software | bin/dropbear; embedded banner SSH-2.0-dropbear_0.48 | Binary inspected; running version, authentication, and listener remain unverified. |
+| Wireless | Boot driver identifies RTL8192F series | Driver evidence; exact physical radio model not independently established. |
+| Console | ttyS0, 115200 baud | Kernel command line. Voltage and framing not measured in the supplied evidence. |
+
+![PCB overview showing HG323RW V3.6 and console pads](evidence/images/pcb-overview.jpeg)
+
+*Owner-supplied PCB photo, reproduced unchanged at the owner's request. The repeated attachment was the same image and is included once. TX/RX/GND markings are visible beside the four-pad header; confirm orientation and voltage on the actual board before wiring.*
 
 **Reference-verified naming caveat:** Netlink's firmware page lists HG323RGW hardware 3.6 with an HG323RWplus-named image. Its current firmware catalogue separates multiple hardware and firmware families, including VD5 entries. This supports a naming overlap, not proof of interchangeability or an exact chip suffix for this specimen. Do not flash a similarly named image on that basis. [Netlink legacy firmware listing](https://netlinkict.com/netlink-firmwares/) · [Netlink firmware catalogue](https://netlinkict.com/firmwares/)
 
-For a verified board specification, retain redacted photographs of the PCB revision and IC markings, boot-reported RAM/flash identification, and runtime CPU output. Linux MemTotal is usable memory, not necessarily the installed DRAM capacity; overlapping MTD partitions must not be summed to infer flash capacity.
+The hardware values above are supported by the supplied photo and [boot excerpts](evidence/boot-excerpts.txt). Linux MemTotal is usable memory, not necessarily installed DRAM capacity. Boot-reported values are not independent measurements.
 
 ---
 
@@ -135,7 +141,7 @@ Keep raw logs and firmware privately. Redact passwords, all password hashes, Wi-
 
 ## 2. Identify and observe UART
 
-**Reported outcome:** UART communication worked. The exact pad order and serial configuration are missing from the accessible record.
+**Observed evidence:** the supplied serial boot capture is readable, and its kernel command line specifies `console=ttyS0,115200`. The PCB photo shows console-pad labels. Adapter wiring, measured I/O voltage, and terminal framing were not captured.
 
 1. Photograph the board with a clear orientation reference; mask device labels in the publication copy.
 2. With power removed, identify ground using continuity to a known ground point.
@@ -150,10 +156,10 @@ On macOS, discover the serial device:
 ls /dev/cu.*
 ```
 
-Configure the terminal with the measured baud rate and framing. 8 data bits, no parity, 1 stop bit, and no flow control is a common starting hypothesis, not a verified setting for this board. Replace both placeholders before use:
+The captured Linux console is configured for 115200 baud. Verify framing and electrical compatibility on your board; 8N1 with no flow control is a starting hypothesis, not a preserved measurement. Replace SERIAL_DEVICE with your adapter path:
 
 ```sh
-screen SERIAL_DEVICE BAUD_RATE
+screen SERIAL_DEVICE 115200
 ```
 
 **Acceptance criterion:** repeatably legible boot text and controlled input without resets or corrupted characters. Save a redacted boot capture containing the bootloader banner, kernel banner, and storage messages.
@@ -162,7 +168,7 @@ screen SERIAL_DEVICE BAUD_RATE
 
 ## 3. Inspect U-Boot without writing
 
-**Reported outcome:** U-Boot was explored. No exact version, prompt, autoboot key, memory addresses, or environment dump is preserved.
+**Observed evidence:** the log records `U-Boot 2011.12.M (May 22 2021 - 14:20:00)` and an autoboot prompt saying to hit any key. It also records DRAM, flash, and partition configuration. It does not preserve an interactive U-Boot session or a complete environment dump.
 
 Interrupt autoboot only using the prompt's documented key. If a password is requested, use an authorized credential. Do not infer that every build permits interruption.
 
@@ -190,7 +196,29 @@ Do not run saveenv, erase, flash-write, upgrade, memory-write, or reset-to-defau
 
 ## 4. Map storage and inspect firmware offline
 
-**Reported outcome:** flash mapping and SquashFS extraction were part of the investigation. Acquisition method, partition offsets, image digest, and extraction settings are not available.
+**Observed evidence:** the supplied conversion script parses U-Boot-style `md.b` rows beginning at `0xB4500000` for `0x521B3F` bytes. A rerun recovered **5,380,927 bytes with zero missing, duplicate, or conflicting bytes**, and the result matched the supplied SquashFS byte for byte. This verifies reconstruction consistency; it does not authenticate the original capture.
+
+Root filesystem SHA-256:
+
+```text
+0308c4d98b54ba6cc40db90651745e5777f465f2a4b55f5e2b2c7328eab55d57
+```
+
+The boot partition string implies these sequential flash offsets; ends are exclusive:
+
+| Partition | Start | End | Size |
+| --- | --- | --- | --- |
+| boot | 0x000000 | 0x040000 | 256 KiB |
+| env | 0x040000 | 0x042000 | 8 KiB |
+| env2 | 0x042000 | 0x044000 | 8 KiB |
+| config | 0x044000 | 0x100000 | 752 KiB |
+| k0 | 0x100000 | 0x500000 | 4 MiB |
+| r0 | 0x500000 | 0xD00000 | 8 MiB |
+| framework1 | 0xD00000 | 0x1000000 | 3 MiB |
+
+These offsets are calculated from the logged partition string. The image's 5.13 MiB of used data fits within the 8 MiB r0 partition. The script's mapped address is consistent with an inferred `0xB4000000` flash window; do not confuse a CPU-mapped address with a file offset.
+
+The owner-provided [conversion script](tools/hex_to_bin.py) is included unchanged. Run it on a working copy in a directory containing `rootfs_combined.hex`; it writes `rootfs.squashfs`. Its address and size constants are specific to this capture. See [validation details](evidence/offline-validation.md).
 
 Once Linux shell access exists, inspect the runtime map:
 
@@ -232,13 +260,23 @@ unsquashfs -d extracted-rootfs -offset VERIFIED_DECIMAL_OFFSET firmware.bin
 
 Check the local help before using this form. Legacy vendor SquashFS variants may need compatible tooling; extraction failure does not by itself prove corruption. [SquashFS tools upstream](https://github.com/plougher/squashfs-tools)
 
-**Acceptance criterion:** a coherent extracted filesystem containing expected directories and a valid CLI executable, plus recorded input SHA-256, offset, compressor, and tool version. These values remain unfilled for the historical experiment.
+**Validation result:** unsquashfs 4.7.5 recognized SquashFS 4.0 with LZMA and extracted regular files. The extracted CLI exactly matched the supplied extracted_fs/bin/cli. Device-node creation failed under the unprivileged account; this was not a complete recreation of a bootable root filesystem. Digests and tool results are recorded in the evidence folder.
 
 ---
 
 ## 5. Trace the vendor CLI in Ghidra
 
-**Reported discovery:** `enterlinuxshell` was identified during reverse engineering and used to reach Linux. The relevant function addresses, xrefs, and decompiled code are not available.
+**Observed discovery evidence:** the CLI contains `Enter linux shell` at file offset `0x204b0` and `enterlinuxshell` at `0x204c4`. ELF load-segment mapping gives virtual addresses `0x004204b0` and `0x004204c4`, matching the supplied Ghidra labels.
+
+![Ghidra CLI command-table listing](evidence/images/cli-command-table.png)
+
+*The listing shows the help-string pointer at 0x004378ec and command-string pointer at 0x004378f0. The visible decompiled FUN_0040cc48 performs string matching and table traversal; this screenshot does not establish that it is the shell-launch handler.*
+
+![Ghidra references to the shell help string](evidence/images/cli-string-xrefs.png)
+
+*Two displayed references, 0x004378ec and 0x0043790c, target the help string at 0x004204b0. These are references to “Enter linux shell,” not direct proof of calls launching a shell.*
+
+The owner reports using the discovered command to obtain Linux shell access. The screenshots substantiate the static discovery; a separate runtime identity capture is still needed to independently verify the root session.
 
 Inspect, but do not execute, the extracted binary:
 
@@ -344,7 +382,11 @@ ls -l /etc/passwd
 
 - **Observed:** the administrator is a UID 0 account. The standard user has UID 1; GID 0 does not make it root.
 - **Observed:** the nobody-named account also has UID 0. /dev/null is not a usable interactive shell, but this does not neutralize all risks of assigning UID 0.
-- **Reported, pending direct verification:** /etc/passwd points to /var/passwd and startup generates its contents. Confirm the link and inspect extracted startup scripts before documenting the generation mechanism as proven.
+- **Observed:** the supplied extracted filesystem contains the symlink `/etc/passwd → /var/passwd`. The startup screenshot shows references to PW_HOME_DIR and PW_CMD_SHELL. It supports investigation of account initialization but, because the decompiled calls are partly clipped, does not independently establish the complete generation mechanism.
+
+![Ghidra startup shell-symbol reference](evidence/images/startup-shell-symbol.png)
+
+*The startup binary view shows PW_CMD_SHELL at 0x0041f0fc and references in FUN_0040452c. Symbol references alone do not establish runtime contents of /var/passwd.*
 - **Observed format:** two password fields used the MD5-crypt marker with an empty salt component. No hash strings are reproduced. This is a password-storage weakness, not evidence that a password has been recovered.
 
 Do not crack, publish, or reuse the supplied hashes. Do not edit accounts or shell fields during this read-only investigation.
@@ -353,7 +395,9 @@ Do not crack, publish, or reuse the supplied hashes. Do not edit accounts or she
 
 ## 9. Explore SSH without changing the service
 
-**Known:** Dropbear is present. **Unknown:** whether it runs, where it listens, which authentication policy applies, and whether an SSH login succeeds.
+**Observed:** the supplied filesystem contains `/bin/dropbear`, with the embedded banner `SSH-2.0-dropbear_0.48`. This is a static version clue, not a live negotiated banner. **Unknown:** whether it runs, where it listens, which authentication policy applies, and whether an SSH login succeeds.
+
+The boot log records attempts to insert an `inacc` rule dropping TCP port 22 on `br0` (original lines 684 and 1314). This may explain unavailable LAN SSH, but the final effective ruleset and listener state are not captured. Nearby firewall errors and later rule changes mean the logged command alone is insufficient to prove the resulting policy. See [boot excerpts](evidence/boot-excerpts.txt); the logged mutation commands are evidence, not reproduction instructions.
 
 On the router:
 
@@ -420,13 +464,13 @@ Do not attach raw firmware dumps, Ghidra projects containing embedded secrets, p
 
 ## Evidence included in this repository
 
-See [evidence index](evidence/README.md) for sanitized excerpts and provenance. No original screenshots or hardware captures were returned by the conversation retrieval interface. The excerpts are transcriptions, not reconstructed terminal screenshots.
+See the [evidence index](evidence/README.md) for the supplied PCB photograph and Ghidra screenshots, selected boot-log lines, firmware digests, offline validation results, and original conversation transcriptions. Images are owner-supplied artifacts, not newly captured hardware sessions. The PCB photo is unchanged at the owner's explicit request. Raw firmware and the complete extracted tree are analyzed locally; this repository publishes the supporting evidence and conversion script.
 
 ---
 
 ## Sources
 
-- **Private project record:** “Find Router RX TX,” supplied by the owner and retrieved for this document. Available closing turns include actual account metadata and a direct report of Dropbear presence. Earlier milestones are reported summaries. The private conversation link and original sensitive output are intentionally omitted from this publishable guide.
+- **Private project record:** “Find Router RX TX,” supplied by the owner and retrieved for this document. Available closing turns include actual account metadata and the reported root-shell result. The owner subsequently supplied the boot log, image, dump, extracted files, conversion script, and photographs used for the direct checks above. The private conversation link and original sensitive output are intentionally omitted from this publishable guide.
 - [Netlink legacy firmware listing](https://netlinkict.com/netlink-firmwares/) — manufacturer naming and revision caveat.
 - [Netlink current firmware catalogue](https://netlinkict.com/firmwares/) — separate hardware/firmware families; not a recommendation to upgrade.
 - [U-Boot printenv documentation](https://docs.u-boot.org/en/latest/usage/cmd/printenv.html) — standard environment inspection; vendor-build differences apply.

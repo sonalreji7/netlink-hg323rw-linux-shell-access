@@ -1,0 +1,27 @@
+SELECTED ORIGINAL BOOT-LOG LINES
+Line numbers refer to the owner-supplied bootlog.txt.
+Build host identifier redacted. Nonselected lines are omitted.
+Commands shown below are historical logged operations, NOT instructions to run.
+
+0004: Bismarck Bootloader 3.4.|
+0005: PRELOADER: RTL9602C
+0009: II: OCP 625MHz(625/1), MEM 500MHz, LX 200MHz, SPIF 50MHz
+0061: U-Boot 2011.12.M (May 22 2021 - 14:20:00)
+0063: Board: RTL9602C / CPU:625MHz / LX:200MHx / MEM:500MHz / Type:DDR2
+0064: DRAM:  128 MB
+0065: SPI-F: C84018/MMIO16-1 1x16 MB (plr_flash_info @ 83c2844c)
+0069: mtdparts0=mtdparts=rtk_spi_nor_mtd:256K(boot),8K(env),8K(env2),752K(config),4M(k0),8M(r0),3M(framework1) root=31:5
+0089: Linux version 2.6.30.9 (root@[BUILD-HOST-REDACTED]) (gcc version 4.4.6 (Realtek RSDK-1.5.6p2) ) #4 Tue Aug 10 17:55:31 CST 2021 [luna SDK 3.0.01]
+0091: CPU revision is: 0000dc02
+0103: Kernel command line: console=ttyS0,115200   mtdparts=physmap-flash:256K(boot),8K(env),8K(env2),752K(config),4M(k0),8M(r0),3M(framework1) root=31:5
+0111: Memory: 97904k/129016k available (9376k kernel code, 30948k reserved, 3021k data, 132k init, 0k highmem)
+0137: squashfs: version 4.0 (2009/01/31) Phillip Lougher
+0188: IS_RTL8192F_SERIES value8 = d 
+0288: VFS: Mounted root (squashfs filesystem) readonly on device 31:5.
+0290: init started: BusyBox v1.12.4 (2021-08-10 17:55:58 CST)
+0294: Mounting /dev/mtdblock3 onto /var/config as the configuration data storage
+0684:    CMD: /bin/iptables -I inacc -i br0 -p TCP --dport 22 -j DROP 
+1314:    CMD: /bin/iptables -I inacc -i br0 -p TCP --dport 22 -j DROP 
+1331: memtest pass
+1332: <checkPONLinkStatus 13711> gpon state:1
+1333: endof boot self check fail##########

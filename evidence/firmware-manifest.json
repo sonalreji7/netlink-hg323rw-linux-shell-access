@@ -1,0 +1,26 @@
+{
+  "rootfs.squashfs": {
+    "bytes": 5380927,
+    "sha256": "0308c4d98b54ba6cc40db90651745e5777f465f2a4b55f5e2b2c7328eab55d57"
+  },
+  "rootfs_combined.hex": {
+    "bytes": 26238200,
+    "sha256": "096d426848e857aa799b120a43fbd7df1b06d48f63e80191f5e9542d5fea9493"
+  },
+  "hex_to_bin.py": {
+    "bytes": 2194,
+    "sha256": "481658466ae37a7439f1cb658e1e2aed077471b64a6c99f96f57a828e7e2101b"
+  },
+  "extracted_fs/bin/cli": {
+    "bytes": 163320,
+    "sha256": "b19bf7add62a944e3222ee0d2a717dfb2cdf824a0636d7860c65f6b3a8a48485"
+  },
+  "extracted_fs/bin/startup": {
+    "bytes": 58400,
+    "sha256": "c0fdc391167650dddfbeb1887ceeb81f2ba0207a862b15c55b15b502f5f8d4ba"
+  },
+  "extracted_fs/bin/dropbear": {
+    "bytes": 116739,
+    "sha256": "56208b61a7bd31a69c86887a427f2004131e14fc69243892b785742b1c062966"
+  }
+}
